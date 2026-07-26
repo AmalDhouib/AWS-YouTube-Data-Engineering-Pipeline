@@ -1,0 +1,174 @@
+# AWS YouTube Data Engineering Pipeline
+
+## Overview
+
+This project implements an **end-to-end serverless Data Engineering pipeline on AWS** that collects, validates, transforms, and analyzes YouTube trending video data.
+
+The pipeline automatically retrieves trending videos and category reference data from the **YouTube Data API v3**, stores raw JSON data in the **Bronze** layer on Amazon S3, transforms it into curated datasets in the **Silver layer**, validates data quality, and produces business-ready
+analytical datasets in the **Gold layer**.
+
+The solution is fully orchestrated using **AWS Step Functions** and designed around a modern **Medallion Architecture (Bronze → Silver → Gold)**.
+
+------------------------------------------------------------------------
+
+# Problem Statement
+
+Millions of videos are published on YouTube every day, making it difficult to identify trending content, compare channel performance, and analyze audience engagement across different countries.
+
+Although the YouTube Data API provides access to this information, the raw API responses are complex, nested, and not optimized for analytical workloads.
+
+The objective of this project is to build an automated AWS Data Engineering pipeline that continuously collects YouTube trending data, transforms it into structured analytical datasets, validates data quality, and makes the data easily accessible for SQL analysis and interactive dashboards.
+
+------------------------------------------------------------------------
+
+# Business Value
+
+The pipeline enables analysts and content creators to:
+
+- identify trending videos across multiple countries;
+- compare channel performance;
+- analyze audience engagement using views, likes and comments;
+- study category popularity over time;
+- query analytical datasets with Amazon Athena;
+
+------------------------------------------------------------------------
+
+# Architecture
+
+![Architecture](architecture.png)
+
+## Architecture Components
+
+### Bronze Layer
+
+-   Amazon EventBridge triggers the pipeline.
+-   AWS Step Functions orchestrates the workflow.
+-   AWS Lambda retrieves:
+    -   Trending videos
+    -   Video categories
+-   Raw JSON files are stored in Amazon S3.
+-   AWS Glue Crawler catalogs Bronze datasets.
+
+### Silver Layer
+
+Two transformations run **in parallel**:
+
+**AWS Glue** - cleans trending statistics - enforces schema - removes
+duplicates - calculates derived metrics - writes partitioned Parquet
+datasets
+
+**AWS Lambda** - transforms category reference data - validates
+categories - stores cleaned reference datasets
+
+Both datasets are registered in the AWS Glue Data Catalog.
+
+### Data Quality Gate
+
+A dedicated Lambda validates:
+
+-   row count
+-   schema
+-   null percentage
+-   freshness
+-   numeric ranges
+
+If validation fails, an Amazon SNS notification is sent and the workflow
+stops.
+
+### Gold Layer
+
+AWS Glue creates three analytical datasets:
+
+  Dataset              Description
+  -------------------- ---------------------------------
+  trending_analytics   Daily regional KPIs
+  channel_analytics    Channel performance and ranking
+  category_analytics   Category trends and engagement
+
+Gold datasets are stored in Amazon S3 and cataloged in AWS Glue.
+
+### Analytics Layer
+
+Amazon Athena performs SQL queries directly on Parquet files.
+
+------------------------------------------------------------------------
+
+# Step Functions Workflow
+
+![Workflow](stepfunctions_graph.png)
+
+Pipeline execution:
+
+1.  Ingest data from the YouTube API.
+2.  Wait for S3 consistency.
+3.  Execute two transformations in parallel:
+    -   Bronze → Silver Statistics (Glue)
+    -   Reference Data Transformation (Lambda)
+4.  Run Data Quality validation.
+5.  If validation succeeds:
+    -   Execute Silver → Gold Glue job.
+6.  Publish SNS success notification.
+7.  If any step fails:
+    -   Publish the corresponding SNS failure notification.
+
+------------------------------------------------------------------------
+
+# AWS Services
+
+-   Amazon S3
+-   AWS Lambda
+-   AWS Glue
+-   AWS Glue Crawler
+-   AWS Glue Data Catalog
+-   AWS Step Functions
+-   Amazon EventBridge
+-   Amazon Athena
+-   Amazon SNS
+-   Amazon CloudWatch
+-   AWS IAM
+
+------------------------------------------------------------------------
+
+# Medallion Architecture
+
+## Bronze
+
+Raw JSON data exactly as returned by the YouTube API.
+
+## Silver
+
+Validated, standardized and cleansed datasets stored as Parquet.
+
+## Gold
+
+Business-oriented datasets optimized for reporting and analytics.
+
+------------------------------------------------------------------------
+
+# Features
+
+-   Fully serverless architecture
+-   Event-driven orchestration
+-   Parallel processing
+-   Automated data quality validation
+-   Medallion Architecture
+-   Glue Data Catalog integration
+-   Athena SQL analytics
+-   SNS alerting
+-   CloudWatch monitoring
+
+
+
+------------------------------------------------------------------------
+
+# Author
+
+Personal AWS Data Engineering project developed to demonstrate practical skills in:
+
+-   Data Engineering
+-   AWS Serverless
+-   ETL Pipelines
+-   Medallion Architecture
+-   Apache Spark
+-   AWS Glue
+-   Workflow Orchestration
