@@ -2,12 +2,14 @@
 
 ## Overview
 
-This project implements an **end-to-end serverless Data Engineering pipeline on AWS** that collects, validates, transforms, and analyzes YouTube trending video data.
+This project implements an **end-to-end serverless Data Engineering and Analytics pipeline on AWS** that collects, validates, transforms, and analyzes YouTube trending video data.
 
-The pipeline automatically retrieves trending videos and category reference data from the **YouTube Data API v3**, stores raw JSON data in the **Bronze** layer on Amazon S3, transforms it into curated datasets in the **Silver layer**, validates data quality, and produces business-ready
-analytical datasets in the **Gold layer**.
+The pipeline automatically retrieves trending videos and category reference data from the **YouTube Data API v3**, stores raw JSON data in the **Bronze layer** on Amazon S3, transforms it into curated datasets in the **Silver layer**, validates data quality, and produces business-ready analytical datasets in the **Gold layer**.
 
-The solution is fully orchestrated using **AWS Step Functions** and designed around a modern **Medallion Architecture (Bronze → Silver → Gold)**.
+Gold datasets are cataloged using the **AWS Glue Data Catalog** and queried with **Amazon Athena**. **Power BI** connects to Amazon Athena through the **Amazon Athena ODBC Driver** to provide interactive dashboards for analyzing video trends, channel performance, category popularity, and audience engagement.
+
+The solution is orchestrated using **AWS Step Functions** and designed around a modern **Medallion Architecture (Bronze → Silver → Gold)**, covering the complete data lifecycle from ingestion to business intelligence and visualization.
+
 
 ------------------------------------------------------------------------
 
@@ -30,6 +32,7 @@ The pipeline enables analysts and content creators to:
 - analyze audience engagement using views, likes and comments;
 - study category popularity over time;
 - query analytical datasets with Amazon Athena;
+- Explore business KPIs and trends through interactive Power BI dashboards;
 
 ------------------------------------------------------------------------
 
@@ -110,6 +113,12 @@ Pipeline execution:
 6.  Publish SNS success notification.
 7.  If any step fails:
     -   Publish the corresponding SNS failure notification.
+    
+# Power BI Integration
+
+Power BI provides the final **Business Intelligence and visualization layer** of the pipeline.
+
+Instead of connecting directly to raw S3 files, Power BI consumes the analytical datasets exposed through Amazon Athena.
 
 ------------------------------------------------------------------------
 
@@ -144,6 +153,89 @@ Validated, standardized and cleansed datasets stored as Parquet.
 Business-oriented datasets optimized for reporting and analytics.
 
 ------------------------------------------------------------------------
+
+## Prerequisites
+
+Before connecting Power BI to Amazon Athena, make sure that:
+
+- Power BI Desktop is installed
+- Gold datasets are available in Amazon S3
+- Gold tables are registered in AWS Glue Data Catalog
+- Gold tables can be successfully queried from Amazon Athena
+- An Athena workgroup is available
+- An S3 query result location is configured
+- AWS credentials with the required permissions are available
+
+The credentials used by the ODBC connection must have the required permissions to access:
+
+- Amazon Athena
+- AWS Glue Data Catalog
+- The relevant Amazon S3 resources
+---
+
+# Installing the Amazon Athena ODBC Driver
+
+Power BI uses the **Amazon Athena ODBC Driver** to communicate with Amazon Athena.
+
+Download the official driver from AWS:
+
+https://docs.aws.amazon.com/athena/latest/ug/odbc-v2-driver.html
+
+For a 64-bit Power BI Desktop installation on Windows, install the **64-bit Amazon Athena ODBC Driver**.
+
+After installation, open:
+
+```text
+Windows
+   ↓
+ODBC Data Sources (64-bit)
+   ↓
+System DSN
+   ↓
+Add
+   ↓
+Amazon Athena ODBC Driver
+```
+
+---
+# Configuring the Athena ODBC DSN
+
+Create a new Data Source Name (DSN).
+
+Example:
+
+```text
+Data Source Name: YouTube_Athena
+Region: us-east-1
+Workgroup: primary
+Authentication Type: Default Credentials
+```
+
+The AWS Region must correspond to the region where the Athena resources used by the project are configured.
+
+##  ODBC Connection
+
+Power BI can also connect through the generic ODBC connector.
+
+Select:
+
+```text
+Home
+   ↓
+Get Data
+   ↓
+ODBC
+```
+
+Then select:
+
+```text
+YouTube_Athena
+```
+
+Power BI uses the existing Athena DSN and its configured AWS authentication.
+
+After connecting successfully, Power BI can access the analytical tables exposed through Athena.
 
 # Features
 
