@@ -38,7 +38,7 @@ The pipeline enables analysts and content creators to:
 
 # Architecture
 
-![Architecture](architecture.png)
+![Architecture](architecture_aws.png)
 
 ## Architecture Components
 
